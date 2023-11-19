@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { sign } from 'jsonwebtoken';
 import { UserService } from 'src/user/user.service';
-import { Conflict, NotFound, BadRequest, Unauthorized } from 'http-errors';
-import { compareSync } from 'bcrypt';
+import { Conflict, NotFound } from 'http-errors';
+import { compareSync } from 'bcryptjs';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ConfigService } from '@nestjs/config';
 

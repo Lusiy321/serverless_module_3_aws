@@ -1,22 +1,53 @@
 /* eslint-disable prettier/prettier */
-import { Context } from 'aws-lambda';
-import { createServer, proxy } from 'aws-serverless-express';
-import express from 'express';
 import { NestFactory } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
+import { Callback, Context, Handler } from 'aws-lambda';
+import serverlessExpress from '@vendia/serverless-express';
 
-const expressApp = express();
+let server: Handler;
 
-export const handler = async (event: any, context: Context) => {
-  const server = createServer(expressApp);
-
+export async function start() {
+  const PORT = 5000;
   const app = await NestFactory.create(
     AppModule,
-    new ExpressAdapter(expressApp),
+    new ExpressAdapter(express()),
+    {
+      cors: true,
+    },
   );
+  app.enableCors();
+  const config = new DocumentBuilder()
+    .setTitle('Event and Show server')
+    .setDescription('REAST API Documentation')
+    .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        description: 'JWT Authorization',
+        type: 'http',
+        in: 'header',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'BearerAuthMethod',
+    )
+    .addServer(`http://localhost:${PORT}`)
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
 
   await app.init();
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverlessExpress({ app: expressApp });
+}
 
-  return proxy(server, event, context, 'PROMISE');
+export const handler: Handler = async (
+  event: any,
+  context: Context,
+  callback: Callback,
+) => {
+  server = server ?? (await start());
+  return server(event, context, callback);
 };

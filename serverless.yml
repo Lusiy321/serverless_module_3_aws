@@ -1,16 +1,25 @@
-service: nestjs-app
-
+service: serverless-module-3-aws
+frameworkVersion: '3'
+useDotenv: true
+plugins:
+  - serverless-offline
 provider:
   name: aws
   runtime: nodejs18.x
-  region: your-aws-region
-
-
-provider:
-  name: aws
-  runtime: nodejs18.x
-  region: us-east-2
+  memorySize: 512
+  stage: dev
+  timeout: 15
+  region: eu-central-1
+  environment:
+    SECRET_KEY: dsfklsdkflsdlslkfsdlldskf
 
 functions:
-  app:
-    handler: arn:aws:lambda:us-east-2:338220707012:function:less_3_foo
+  main:
+    handler: dist/serverless.handler
+    events:
+      - http:
+          method: ANY
+          path: /
+      - http:
+          method: ANY
+          path: '{proxy+}'

@@ -1,7 +1,10 @@
-# compiled output
-*.env
-/dist
+# package directories
 /node_modules
+.env
+jspm_packages
+
+# Serverless directories
+.serverless
 
 # Logs
 logs

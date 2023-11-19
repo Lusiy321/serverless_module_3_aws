@@ -4,7 +4,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { User } from './user.model';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
-import { hashSync } from 'bcrypt';
+import { hashSync } from 'bcryptjs';
 import { NotFound, BadRequest, Unauthorized } from 'http-errors';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 
