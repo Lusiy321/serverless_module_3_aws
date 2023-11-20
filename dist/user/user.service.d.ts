@@ -7,7 +7,7 @@ export declare class UserService {
     private readonly tableName;
     constructor(configService: ConfigService);
     hashPassword(password: string): Promise<string>;
-    createUser(user: User): Promise<void>;
+    createUser(user: User): Promise<object>;
     getUserByEmail(email: string | JwtPayload): Promise<User | null>;
     refreshAccessToken(req: any): Promise<string>;
 }

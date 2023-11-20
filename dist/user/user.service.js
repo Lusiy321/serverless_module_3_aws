@@ -17,13 +17,13 @@ const uuid_1 = require("uuid");
 const bcryptjs_1 = require("bcryptjs");
 const http_errors_1 = require("http-errors");
 const jsonwebtoken_1 = require("jsonwebtoken");
-let UserService = exports.UserService = class UserService {
+let UserService = class UserService {
     constructor(configService) {
         this.configService = configService;
         this.dynamoDbClient = new dynamodb_1.DocumentClient({
-            region: this.configService.get('AWS_REGION'),
-            accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-            secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+            region: process.env.REGION,
+            accessKeyId: process.env.ACCESS_KEY_ID,
+            secretAccessKey: process.env.SECRET_ACCESS_KEY,
         });
     }
     async hashPassword(password) {
@@ -33,7 +33,8 @@ let UserService = exports.UserService = class UserService {
     }
     async createUser(user) {
         try {
-            const userExist = this.getUserByEmail(user.email);
+            const userExist = await this.getUserByEmail(user.email);
+            console.log(userExist);
             if (!userExist) {
                 const payload = {
                     email: user.email,
@@ -51,6 +52,7 @@ let UserService = exports.UserService = class UserService {
                     Item: user,
                 };
                 await this.dynamoDbClient.put(params).promise();
+                return { token: user.accessToken };
             }
             else {
                 throw new http_errors_1.NotFound('User exist');
@@ -104,6 +106,7 @@ let UserService = exports.UserService = class UserService {
         }
     }
 };
+exports.UserService = UserService;
 exports.UserService = UserService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])

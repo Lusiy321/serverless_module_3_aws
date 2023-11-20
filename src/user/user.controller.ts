@@ -12,13 +12,13 @@ export class UserController {
   @ApiResponse({ status: 200, type: String })
   @Get(':email')
   async getUserByEmail(@Param('email') email: string): Promise<User | null> {
-    return this.userService.getUserByEmail(email);
+    return await this.userService.getUserByEmail(email);
   }
 
   @ApiOperation({ summary: 'Create User' })
   @ApiResponse({ status: 201, type: String })
   @Post('/')
-  async createUser(@Body() user: User): Promise<void> {
-    await this.userService.createUser(user);
+  async createUser(@Body() user: User): Promise<object> {
+    return await this.userService.createUser(user);
   }
 }

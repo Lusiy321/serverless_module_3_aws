@@ -16,7 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const swagger_1 = require("@nestjs/swagger");
-let AuthController = exports.AuthController = class AuthController {
+let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
@@ -25,6 +25,7 @@ let AuthController = exports.AuthController = class AuthController {
         return { token };
     }
 };
+exports.AuthController = AuthController;
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Login User' }),
     (0, swagger_1.ApiResponse)({ status: 200, type: String }),

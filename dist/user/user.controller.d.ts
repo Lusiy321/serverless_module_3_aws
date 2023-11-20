@@ -4,5 +4,5 @@ export declare class UserController {
     private readonly userService;
     constructor(userService: UserService);
     getUserByEmail(email: string): Promise<User | null>;
-    createUser(user: User): Promise<void>;
+    createUser(user: User): Promise<object>;
 }

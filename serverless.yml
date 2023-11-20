@@ -12,6 +12,9 @@ provider:
   region: eu-central-1
   environment:
     SECRET_KEY: dsfklsdkflsdlslkfsdlldskf
+    ACCESS_KEY_ID: AKIAU5P4GNTCIXFQTAHB
+    SECRET_ACCESS_KEY: 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
+    REGION: eu-central-1
 
 functions:
   main:

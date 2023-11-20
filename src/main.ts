@@ -29,6 +29,7 @@ export async function start() {
       },
       'BearerAuthMethod',
     )
+    .addServer(`https://7vnht6l7qk.execute-api.eu-central-1.amazonaws.com/dev/`)
     .addServer(`http://localhost:${PORT}`)
     .build();
   const document = SwaggerModule.createDocument(app, config);

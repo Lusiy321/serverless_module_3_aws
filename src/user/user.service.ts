@@ -15,9 +15,9 @@ export class UserService {
 
   constructor(private readonly configService: ConfigService) {
     this.dynamoDbClient = new DocumentClient({
-      region: this.configService.get<string>('AWS_REGION'),
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+      region: process.env.REGION,
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
     });
   }
   async hashPassword(password: string): Promise<string> {
@@ -26,9 +26,10 @@ export class UserService {
     return hashedPassword;
   }
 
-  async createUser(user: User): Promise<void> {
+  async createUser(user: User): Promise<object> {
     try {
-      const userExist = this.getUserByEmail(user.email);
+      const userExist = await this.getUserByEmail(user.email);
+      console.log(userExist);
       if (!userExist) {
         const payload = {
           email: user.email,
@@ -47,6 +48,7 @@ export class UserService {
         };
 
         await this.dynamoDbClient.put(params).promise();
+        return { token: user.accessToken };
       } else {
         throw new NotFound('User exist');
       }

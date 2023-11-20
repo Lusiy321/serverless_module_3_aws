@@ -12,8 +12,9 @@ const auth_controller_1 = require("./auth.controller");
 const user_module_1 = require("../user/user.module");
 const auth_service_1 = require("./auth.service");
 const user_service_1 = require("../user/user.service");
-let AuthModule = exports.AuthModule = class AuthModule {
+let AuthModule = class AuthModule {
 };
+exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [user_module_1.UserModule],

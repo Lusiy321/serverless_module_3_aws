@@ -17,17 +17,18 @@ const common_1 = require("@nestjs/common");
 const user_service_1 = require("./user.service");
 const user_model_1 = require("./user.model");
 const swagger_1 = require("@nestjs/swagger");
-let UserController = exports.UserController = class UserController {
+let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
     async getUserByEmail(email) {
-        return this.userService.getUserByEmail(email);
+        return await this.userService.getUserByEmail(email);
     }
     async createUser(user) {
-        await this.userService.createUser(user);
+        return await this.userService.createUser(user);
     }
 };
+exports.UserController = UserController;
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get User by email' }),
     (0, swagger_1.ApiResponse)({ status: 200, type: String }),

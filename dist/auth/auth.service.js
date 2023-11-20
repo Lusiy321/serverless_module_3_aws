@@ -17,14 +17,14 @@ const http_errors_1 = require("http-errors");
 const bcryptjs_1 = require("bcryptjs");
 const dynamodb_1 = require("aws-sdk/clients/dynamodb");
 const config_1 = require("@nestjs/config");
-let AuthService = exports.AuthService = class AuthService {
+let AuthService = class AuthService {
     constructor(userService, configService) {
         this.userService = userService;
         this.configService = configService;
         this.dynamoDbClient = new dynamodb_1.DocumentClient({
-            region: this.configService.get('AWS_REGION'),
-            accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-            secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+            region: process.env.REGION,
+            accessKeyId: process.env.ACCESS_KEY_ID,
+            secretAccessKey: process.env.SECRET_ACCESS_KEY,
         });
         this.tableName = this.configService.get('Users');
     }
@@ -51,6 +51,7 @@ let AuthService = exports.AuthService = class AuthService {
         return accessToken;
     }
 };
+exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [user_service_1.UserService,

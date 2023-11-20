@@ -15,9 +15,9 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {
     this.dynamoDbClient = new DocumentClient({
-      region: this.configService.get<string>('AWS_REGION'),
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+      region: process.env.REGION,
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
     });
 
     this.tableName = this.configService.get<string>('Users');
