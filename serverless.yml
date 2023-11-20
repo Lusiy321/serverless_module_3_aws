@@ -11,10 +11,10 @@ provider:
   timeout: 15
   region: eu-central-1
   environment:
-    SECRET_KEY: dsfklsdkflsdlslkfsdlldskf
-    ACCESS_KEY_ID: AKIAU5P4GNTCIXFQTAHB
-    SECRET_ACCESS_KEY: 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
-    REGION: eu-central-1
+    SECRET_KEY: ${env:SECRET_KEY}
+    ACCESS_KEY_ID: ${env:ACCESS_KEY_ID}
+    SECRET_ACCESS_KEY: ${env:SECRET_ACCESS_KEY}
+    REGION: ${env:REGION}
 
 functions:
   main:
