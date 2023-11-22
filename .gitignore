@@ -1,4 +1,6 @@
 # package directories
+/dist
+.vscode
 /node_modules
 .env
 jspm_packages
