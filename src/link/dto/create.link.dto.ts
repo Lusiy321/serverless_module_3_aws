@@ -8,7 +8,7 @@ export class CreateLinkDto {
 
   @IsNotEmpty()
   @IsString()
-  userId: string;
+  email: string;
 
   @IsOptional()
   @IsInt()

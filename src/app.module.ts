@@ -7,7 +7,6 @@ import { ConfigModule } from '@nestjs/config';
 import { UserService } from './user/user.service';
 import { AuthController } from './auth/auth.controller';
 import { LinkModule } from './link/link.module';
-import { DynamoDBModule } from './dinamo-db/dinamo-db.module';
 
 @Module({
   imports: [
@@ -18,7 +17,6 @@ import { DynamoDBModule } from './dinamo-db/dinamo-db.module';
     UserModule,
     AuthModule,
     LinkModule,
-    DynamoDBModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, UserService],

@@ -11,8 +11,6 @@ import { JwtPayload, sign, verify } from 'jsonwebtoken';
 @Injectable()
 export class UserService {
   private readonly dynamoDbClient: DocumentClient;
-  private readonly tableName: string;
-
   constructor(private readonly configService: ConfigService) {
     this.dynamoDbClient = new DocumentClient({
       region: process.env.REGION,
@@ -65,6 +63,7 @@ export class UserService {
 
     try {
       const result = await this.dynamoDbClient.get(params).promise();
+      console.log(result);
       return result.Item as User;
     } catch (error) {
       throw new NotFound('User not found');
