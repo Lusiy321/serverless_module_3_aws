@@ -1,32 +1,67 @@
-import { Controller, Post, Body, Put, Param, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Put,
+  Param,
+  Get,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { LinkService } from './link.service';
 import { CreateLinkDto } from './dto/create.link.dto';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Link')
 @Controller('links')
 export class LinkController {
   constructor(private readonly linkService: LinkService) {}
 
-  // @Post('create')
-  // async createLink(@Body() createLinkDto: CreateLinkDto) {
-  //   const link = await this.linkService.createLink(createLinkDto);
-  //   return link;
-  // }
+  @ApiOperation({ summary: 'Createnew link' })
+  @ApiResponse({ status: 201, type: String })
+  @ApiBearerAuth('BearerAuthMethod')
+  @Post('create')
+  async createLink(@Body() createLinkDto: CreateLinkDto, @Req() req: any) {
+    const link = await this.linkService.createLink(createLinkDto, req);
+    return link;
+  }
+  @ApiOperation({ summary: 'Deactivate link' })
+  @ApiResponse({ status: 200, type: String })
+  @ApiBearerAuth('BearerAuthMethod')
+  @Put('deactivate/:linkId')
+  async deactivateLink(@Param('linkId') linkId: string, @Req() req: any) {
+    const deactivatedLink = await this.linkService.deactivateLink(linkId, req);
+    return deactivatedLink;
+  }
 
-  // @Put('deactivate/:linkId')
-  // async deactivateLink(@Param('linkId') linkId: string) {
-  //   const deactivatedLink = await this.linkService.deactivateLink(linkId);
-  //   return deactivatedLink;
-  // }
+  @ApiOperation({ summary: 'Redirect to link' })
+  @ApiResponse({ status: 200, type: String })
+  @Get(':linkId')
+  async redirect(@Param('linkId') linkId: string, @Res() res: any) {
+    const originUrl = await this.linkService.redirectLink(linkId);
 
-  // @Get('stats/:linkId')
-  // async getLinkStats(@Param('linkId') linkId: string) {
-  //   const visitCount = await this.linkService.getLinkStats(linkId);
-  //   return { visitCount };
-  // }
+    return await res.redirect(302, originUrl);
+  }
 
-  // @Get('list/:userId')
-  // async listUserLinks(@Param('userId') userId: string) {
-  //   const userLinks = await this.linkService.listUserLinks(userId);
-  //   return userLinks;
-  // }
+  @ApiOperation({ summary: 'Link stats' })
+  @ApiResponse({ status: 200, type: String })
+  @Get('stats/:linkId')
+  async getLinkStats(@Param('linkId') linkId: string) {
+    const visitCount = await this.linkService.getLinkStats(linkId);
+    return { visits: visitCount };
+  }
+
+  @ApiOperation({ summary: 'Get user links' })
+  @ApiResponse({ status: 200, type: String })
+  @ApiBearerAuth('BearerAuthMethod')
+  @Get('/')
+  async listUserLinks(@Req() req: any) {
+    const userLinks = await this.linkService.listUserLinks(req);
+    return userLinks;
+  }
 }

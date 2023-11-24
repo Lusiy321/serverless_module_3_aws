@@ -4,19 +4,14 @@ import { UserService } from 'src/user/user.service';
 import { Conflict, NotFound, BadRequest, Unauthorized } from 'http-errors';
 import { compareSync } from 'bcryptjs';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/user.model';
-import { Logical } from 'aws-sdk/clients/glue';
 import { LoginUserDto } from 'src/user/dto/create.user.dto';
 
 @Injectable()
 export class AuthService {
   private readonly dynamoDbClient: DocumentClient;
 
-  constructor(
-    private readonly userService: UserService,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly userService: UserService) {
     this.dynamoDbClient = new DocumentClient({
       region: process.env.REGION,
       accessKeyId: process.env.ACCESS_KEY_ID,
@@ -84,7 +79,8 @@ export class AuthService {
 
       const SECRET_KEY = process.env.SECRET_KEY;
       const findEmail = verify(token, SECRET_KEY) as JwtPayload;
-      const user = await this.userService.getUserByEmail(findEmail);
+      const { email } = findEmail;
+      const user = await this.userService.getUserByEmail(email);
 
       return user;
     } catch (e) {
@@ -92,7 +88,7 @@ export class AuthService {
     }
   }
 
-  async refreshAccessToken(req: any): Promise<string> {
+  async refreshAccessToken(req: any): Promise<object> {
     try {
       const { authorization = '' } = req.headers;
       const [bearer, token] = authorization.split(' ');
@@ -102,14 +98,16 @@ export class AuthService {
       }
 
       const SECRET_KEY = process.env.SECRET_KEY;
-      const findEmail = verify(token, SECRET_KEY);
-      const email = findEmail;
+      const findEmail = verify(token, SECRET_KEY) as JwtPayload;
+      const { email } = findEmail;
+      console.log(email);
       const user = await this.userService.getUserByEmail(email);
+
       if (!user) {
         throw new NotFound('User not found');
       }
       const payload = {
-        email: findEmail,
+        email: email,
       };
       const tokenRef = sign(payload, SECRET_KEY);
       user.accessToken = tokenRef;
@@ -120,7 +118,7 @@ export class AuthService {
 
       await this.dynamoDbClient.put(params).promise();
 
-      return tokenRef;
+      return { token: tokenRef };
     } catch (error) {
       throw new BadRequest('Invalid refresh token');
     }
