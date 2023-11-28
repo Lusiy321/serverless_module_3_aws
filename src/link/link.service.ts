@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Link } from './link.schema';
 import { CreateLinkDto } from './dto/create.link.dto';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { AuthService } from 'src/auth/auth.service';
 import { Unauthorized, NotFound, Conflict, BadRequest } from 'http-errors';
+import { SqsService } from './utils/aws.config.sqs';
 
 @Injectable()
 export class LinkService {
   private readonly dynamoDbClient: DocumentClient;
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly sqsService: SqsService,
+  ) {
     this.dynamoDbClient = new DocumentClient({
       region: process.env.REGION,
       accessKeyId: process.env.ACCESS_KEY_ID,
@@ -16,7 +19,7 @@ export class LinkService {
     });
   }
 
-  async createLink(data: CreateLinkDto, req: any): Promise<Link> {
+  async createLink(data: CreateLinkDto, req: any): Promise<object> {
     try {
       const { originalUrl, lifetime } = data;
       const user = await this.authService.findToken(req);
@@ -26,19 +29,22 @@ export class LinkService {
       }
       const validate = this.isValidUrl(originalUrl);
       if (validate === true) {
+        const lifeDay = parseInt(lifetime);
         const expiresAt = lifetime
-          ? new Date(Date.now() + lifetime * 24 * 60 * 60 * 1000)
+          ? new Date(Date.now() + lifeDay * 24 * 60 * 60 * 1000)
           : null;
 
         const genId = this.generateShortUrl();
-        const shortUrl = process.env.DOMIAN_NAME + genId;
-        const link: Link = {
-          id: genId.toString(),
+        const shortUrl = `${process.env.DOMIAN_NAME}links/${genId}`;
+
+        const date = expiresAt.toString();
+        const link = {
+          id: genId,
           originalUrl: originalUrl,
           shortUrl: shortUrl,
           email: user.email,
           isActive: true,
-          expiresAt: expiresAt.toString(),
+          expiresAt: date,
           visitCount: 0,
         };
         const params = {
@@ -47,19 +53,19 @@ export class LinkService {
         };
 
         await this.dynamoDbClient.put(params).promise();
-        return link;
+        await this.sendMessageToSQS(`New link created: ${shortUrl}`);
+        return { data: link };
       } else {
-        return null;
+        return;
       }
     } catch (e) {
-      throw new Unauthorized('jwt expired');
+      throw new Unauthorized(e);
     }
   }
 
   async deactivateLink(id: string, req: any): Promise<object> {
     try {
       const user = await this.authService.findToken(req);
-
       if (user) {
         const params = {
           TableName: 'Link',
@@ -78,6 +84,11 @@ export class LinkService {
 
             await this.dynamoDbClient.put(param).promise();
             const findNew = await this.dynamoDbClient.get(params).promise();
+            const message = JSON.stringify({
+              linkId: findLink.Item.id,
+              userEmail: findLink.Item.email,
+            });
+            await this.sendMessageToSQS(message);
             return findNew.Item;
           } else if (findLink.Item.isActive === false) {
             throw new Conflict('Link is deactivated');
@@ -127,7 +138,7 @@ export class LinkService {
     }
   }
 
-  async getLinkStats(id: string): Promise<number> {
+  async getLinkStats(id: string): Promise<string> {
     const params = {
       TableName: 'Link',
       Key: { id },
@@ -144,7 +155,6 @@ export class LinkService {
     const user = await this.authService.findToken(req);
     const allLinks = await this.dynamoDbClient.scan(params).promise();
     const arr: any = allLinks.Items;
-    console.log(arr);
     const links = Array.isArray(arr)
       ? arr.filter((obj) => obj.email === user.email)
       : [];
@@ -158,11 +168,11 @@ export class LinkService {
   }
 
   private generateShortUrl() {
-    const min = 10000000;
-    const max = 99999999;
+    const min = 100000;
+    const max = 999999;
     const genId = Math.floor(Math.random() * (max - min + 1)) + min;
 
-    return genId;
+    return genId.toString();
   }
 
   private isValidUrl(url: string) {
@@ -172,5 +182,14 @@ export class LinkService {
     } catch (error) {
       return false;
     }
+  }
+
+  async sendMessageToSQS(messageBody: string): Promise<void> {
+    const params = {
+      MessageBody: messageBody,
+      QueueUrl: process.env.SQS_QUEUE_URL,
+    };
+
+    await this.sqsService.sqs.sendMessage(params).promise();
   }
 }

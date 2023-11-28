@@ -15,5 +15,5 @@ export class CreateLinkDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  readonly lifetime?: number;
+  readonly lifetime?: string;
 }

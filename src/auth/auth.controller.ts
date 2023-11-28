@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, Patch, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
@@ -35,5 +44,27 @@ export class AuthController {
   @Patch('refresh')
   async refresh(@Req() request: any) {
     return await this.authService.refreshAccessToken(request);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('protected-resource')
+  async protectedResource(@Req() req: any) {
+    const { authorization } = req.headers;
+    const [bearer, token] = authorization.split(' ');
+
+    if (bearer !== 'Bearer') {
+      throw new Error('Not authorized');
+    }
+
+    const methodArn =
+      'arn:aws:execute-api:eu-central-1:338220707012:7vnht6l7qk/*/*';
+    const result = await this.authService.authorize(token, methodArn);
+
+    if (
+      result.principalId !== 'user' ||
+      result.policyDocument.Statement[0].Effect !== 'Allow'
+    ) {
+      throw new Error('Not authorized');
+    }
   }
 }

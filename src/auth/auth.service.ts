@@ -6,13 +6,20 @@ import { compareSync } from 'bcryptjs';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { User } from 'src/user/user.model';
 import { LoginUserDto } from 'src/user/dto/create.user.dto';
+import { Lambda } from 'aws-sdk';
 
 @Injectable()
 export class AuthService {
   private readonly dynamoDbClient: DocumentClient;
+  private readonly lambda: Lambda;
 
   constructor(private readonly userService: UserService) {
     this.dynamoDbClient = new DocumentClient({
+      region: process.env.REGION,
+      accessKeyId: process.env.ACCESS_KEY_ID,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    });
+    this.lambda = new Lambda({
       region: process.env.REGION,
       accessKeyId: process.env.ACCESS_KEY_ID,
       secretAccessKey: process.env.SECRET_ACCESS_KEY,
@@ -49,6 +56,20 @@ export class AuthService {
     return accessToken;
   }
 
+  async authorize(token: string, methodArn: string): Promise<any> {
+    const result = await this.lambda
+      .invoke({
+        FunctionName: 'serverless-module-3-aws-dev-main',
+        Payload: JSON.stringify({
+          authorizationToken: `Bearer ${token}`,
+          methodArn,
+        }),
+      })
+      .promise();
+
+    return JSON.parse(result.Payload?.toString());
+  }
+
   async logout(req: any): Promise<object> {
     const user = await this.findToken(req);
     if (!user) {
@@ -81,8 +102,11 @@ export class AuthService {
       const findEmail = verify(token, SECRET_KEY) as JwtPayload;
       const { email } = findEmail;
       const user = await this.userService.getUserByEmail(email);
-
-      return user;
+      if (user) {
+        return user;
+      } else {
+        throw new Unauthorized('jwt expired');
+      }
     } catch (e) {
       throw new Unauthorized('jwt expired');
     }
@@ -96,11 +120,11 @@ export class AuthService {
       if (bearer !== 'Bearer') {
         throw new Unauthorized('Not authorized');
       }
-
+      console.log(token);
       const SECRET_KEY = process.env.SECRET_KEY;
       const findEmail = verify(token, SECRET_KEY) as JwtPayload;
       const { email } = findEmail;
-      console.log(email);
+
       const user = await this.userService.getUserByEmail(email);
 
       if (!user) {

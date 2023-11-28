@@ -18,6 +18,7 @@ export async function start() {
       cors: true,
     },
   );
+
   app.enableCors();
   const config = new DocumentBuilder()
     .setTitle('Event and Show server')

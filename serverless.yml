@@ -15,6 +15,8 @@ provider:
     ACCESS_KEY_ID: ${env:ACCESS_KEY_ID}
     SECRET_ACCESS_KEY: ${env:SECRET_ACCESS_KEY}
     REGION: ${env:REGION}
+    DOMIAN_NAME: ${env:DOMIAN_NAME}
+    SENDGRID_API_KEY: ${env:SENDGRID_API_KEY}
 
 functions:
   main:
